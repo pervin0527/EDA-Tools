@@ -4,9 +4,14 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import norm
+from matplotlib import font_manager, rc
 
-plt.rc('font', family='NanumGothic')
-plt.rcParams['axes.unicode_minus'] = False
+font_path = "./fonts/NanumGothic.ttf"
+font = font_manager.FontProperties(fname=font_path).get_name()
+rc('font', family=font)
+
+# plt.rc('font', family='NanumGothic')
+# plt.rcParams['axes.unicode_minus'] = False
 
 if __name__ == "__main__":
     # 데이터 로드
