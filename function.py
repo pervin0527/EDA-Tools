@@ -90,7 +90,7 @@ def preprocess_text(text):
 
 def create_wordcloud(text_data):
     try:
-        font_path = "C:/Windows/Fonts/malgun.ttf"
+        font_path = "./fonts/NanumGothic.ttf"
         
         # 텍스트 전처리
         processed_words = [preprocess_text(word) for word in text_data]
@@ -141,7 +141,7 @@ def create_styled_bar_chart(data, title, x_label, y_label, color_sequence=None):
             'x':0.5,
             'xanchor': 'center',
             'yanchor': 'top',
-            'font': dict(size=20, family="Malgun Gothic", color="#2F4F4F")
+            'font': dict(size=20, family="NanumGothic", color="#2F4F4F")
         },
         plot_bgcolor='rgba(240,240,240,0.2)',
         paper_bgcolor='white',
@@ -189,7 +189,7 @@ def create_styled_donut_chart(data, title):
             'x':0.5,
             'xanchor': 'center',
             'yanchor': 'top',
-            'font': dict(size=20, family="Malgun Gothic", color="#2F4F4F")
+            'font': dict(size=20, family="NanumGothic", color="#2F4F4F")
         },
         plot_bgcolor='rgba(240,240,240,0.2)',
         paper_bgcolor='white',
@@ -236,7 +236,7 @@ def create_styled_heatmap(data, title):
             'x':0.5,
             'xanchor': 'center',
             'yanchor': 'top',
-            'font': dict(size=20, family="Malgun Gothic", color="#2F4F4F")
+            'font': dict(size=20, family="NanumGothic", color="#2F4F4F")
         },
         plot_bgcolor='white',
         paper_bgcolor='white',
