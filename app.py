@@ -6,16 +6,16 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 from matplotlib import font_manager, rc
 
-# font_path = "./fonts/NanumGothic.ttf"
-# font = font_manager.FontProperties(fname=font_path).get_name()
-# rc('font', family=font)
+# 로컬 또는 서버 환경에서 폰트 경로 설정
+try:
+    font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"  # 서버 환경
+except FileNotFoundError:
+    font_path = "./fonts/NanumGothic.ttf"  # 로컬 환경
 
-font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+# 폰트 설정
 font = font_manager.FontProperties(fname=font_path).get_name()
 rc('font', family=font)
-
-# plt.rc('font', family='NanumGothic')
-# plt.rcParams['axes.unicode_minus'] = False
+rc('axes', unicode_minus=False)  # 마이너스 깨짐 방지
 
 if __name__ == "__main__":
     # 데이터 로드
