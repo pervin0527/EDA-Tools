@@ -6,7 +6,11 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 from matplotlib import font_manager, rc
 
-font_path = "./fonts/NanumGothic.ttf"
+# font_path = "./fonts/NanumGothic.ttf"
+# font = font_manager.FontProperties(fname=font_path).get_name()
+# rc('font', family=font)
+
+font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
 font = font_manager.FontProperties(fname=font_path).get_name()
 rc('font', family=font)
 
