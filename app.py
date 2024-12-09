@@ -28,8 +28,10 @@ work_columns = [col for col in df.columns if "(WORK_" in col]
 # 연령대 컬럼 생성
 df['연령대'] = df['연령'].apply(lambda x: f"{int(x//10*10)}대")
 
-# 전체 데이터를 기반으로 한 mean, std 계산(레이더 차트용)
+# 전체 데이터 기반 mean, std 계산(기본용)
 grouped_stats = df.groupby('연령대')[work_columns].agg(['mean', 'std'])
+
+# mean 값(기본)
 mean_values = grouped_stats.xs('mean', level=1, axis=1)
 
 # 연령대별 본사/현업 비율 계산
@@ -39,7 +41,11 @@ ratio_table = count_table_age.div(count_table_age.sum(axis=1), axis=0)
 # 전체 본사/현업 비율 계산
 count_table_total = df['본사/현업'].value_counts()
 
-# Streamlit 레이아웃
+# 라벨 정제: "ABC(WORK_XXX)" 형태에서 "WORK_XXX"만 추출
+# 예: "SOMETHING (WORK_PROCESS)" -> "PROCESS"
+# split("(WORK_")[1].replace(")", "") 로 WORK_ 이후 부분만 추출
+categories = [c.split("(WORK_")[1].replace(")", "") for c in work_columns]
+
 st.title("WorkStyle 시각화")
 
 tab1, tab2, tab3 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "본사/현업 비율"])
@@ -53,7 +59,7 @@ with tab1:
     all_ages = df['연령대'].unique().tolist()
     selected_ages = st.multiselect("연령대를 선택하세요:", options=all_ages, default=all_ages)
 
-    # 본사/현업 필터링 옵션 추가
+    # 본사/현업 필터링 옵션
     all_positions = df['본사/현업'].unique().tolist()
     selected_positions = st.multiselect("본사/현업을 선택하세요:", options=all_positions, default=all_positions)
 
@@ -92,10 +98,18 @@ with tab1:
 with tab2:
     st.header("연령대별 Work_Style 레이더 차트")
 
-    radar_selected_ages = st.multiselect("레이더 차트에서 비교할 연령대를 선택하세요:", options=all_ages, default=all_ages)
+    # 레이더 차트에서도 본사/현업 필터 추가
+    radar_selected_ages = st.multiselect("레이더 차트에서 비교할 연령대를 선택하세요:", options=df['연령대'].unique(), default=df['연령대'].unique())
+    radar_selected_positions = st.multiselect("본사/현업을 선택하세요:", options=df['본사/현업'].unique().tolist(), default=df['본사/현업'].unique().tolist())
 
-    if len(radar_selected_ages) > 0:
-        categories = work_columns
+    # 레이더 차트용 필터 적용
+    radar_filtered_df = df[df['연령대'].isin(radar_selected_ages) & df['본사/현업'].isin(radar_selected_positions)]
+
+    if len(radar_filtered_df) > 0 and len(radar_selected_ages) > 0:
+        # 필터링된 데이터로 mean 재계산
+        radar_grouped_stats = radar_filtered_df.groupby('연령대')[work_columns].mean()
+
+        # 레이더 차트 그리기
         N = len(categories)
         angles = np.linspace(0, 2*np.pi, N, endpoint=False)
 
@@ -103,15 +117,15 @@ with tab2:
         ax = plt.subplot(111, polar=True)
 
         for age in radar_selected_ages:
-            if age in mean_values.index:
-                values = mean_values.loc[age, :].values
+            if age in radar_grouped_stats.index:
+                values = radar_grouped_stats.loc[age, :].values
                 values = np.append(values, values[0])
                 angle_for_plot = np.append(angles, angles[0])
 
                 ax.plot(angle_for_plot, values, label=age)
                 ax.fill(angle_for_plot, values, alpha=0.1)
 
-        # 축 라벨 설정
+        # 축 라벨 설정: 정제된 categories 사용
         ax.set_xticks(angles)
         ax.set_xticklabels(categories, fontsize=9)
 
@@ -129,26 +143,26 @@ with tab2:
         ax.tick_params(axis='x', pad=15)
 
         plt.legend(bbox_to_anchor=(1.1, 1.1))
-        plt.title("연령대별 Work_Style 평균 레이더 차트", y=1.1)
+        plt.title("연령대별 Work_Style 평균 레이더 차트 (필터 적용)", y=1.1)
         st.pyplot(fig_radar)
     else:
-        st.info("비교할 연령대를 하나 이상 선택해주세요.")
+        st.info("비교할 연령대 및 본사/현업을 하나 이상 선택하고 해당하는 데이터가 있어야 합니다.")
 
-with tab3:
-    st.header("연령대별 본사/현업 비율 및 전체 본사/현업 비율")
+# with tab3:
+#     st.header("연령대별 본사/현업 비율 및 전체 본사/현업 비율")
     
-    # 연령대별 본사/현업 비율 stacked bar
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ratio_table.plot(kind='bar', stacked=True, ax=ax)
-    ax.set_title("연령대별 본사/현업 비율")
-    ax.set_xlabel("연령대")
-    ax.set_ylabel("비율")
-    ax.legend(title="본사/현업", bbox_to_anchor=(1.05, 1), loc='upper left')
-    st.pyplot(fig)
+#     # 연령대별 본사/현업 비율 stacked bar
+#     fig, ax = plt.subplots(figsize=(10, 6))
+#     ratio_table.plot(kind='bar', stacked=True, ax=ax)
+#     ax.set_title("연령대별 본사/현업 비율")
+#     ax.set_xlabel("연령대")
+#     ax.set_ylabel("비율")
+#     ax.legend(title="본사/현업", bbox_to_anchor=(1.05, 1), loc='upper left')
+#     st.pyplot(fig)
 
-    # 전체 본사/현업 비율 파이차트
-    fig_pie = plt.figure(figsize=(4, 4))
-    count_table_total.plot(kind='pie', autopct='%.1f%%', startangle=90)
-    plt.title("전체 본사/현업 비율")
-    plt.ylabel("")
-    st.pyplot(fig_pie)
+#     # 전체 본사/현업 비율 파이차트
+#     fig_pie = plt.figure(figsize=(4, 4))
+#     count_table_total.plot(kind='pie', autopct='%.1f%%', startangle=90)
+#     plt.title("전체 본사/현업 비율")
+#     plt.ylabel("")
+#     st.pyplot(fig_pie)
