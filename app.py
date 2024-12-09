@@ -16,7 +16,6 @@ font_manager.fontManager.addfont(font_path)
 plt.rcParams['font.family'] = font_manager.FontProperties(fname=font_path).get_name()
 plt.rcParams['axes.unicode_minus'] = False
 
-
 # 데이터 로드
 df = pd.read_excel("./data/SR_ROW.xlsx", sheet_name="308명")
 
@@ -28,19 +27,6 @@ work_columns = [col for col in df.columns if "(WORK_" in col]
 
 # 연령대 컬럼 생성
 df['연령대'] = df['연령'].apply(lambda x: f"{int(x//10*10)}대")
-
-# 연령대별 mean, std 계산
-grouped_stats = df.groupby('연령대')[work_columns].agg(['mean', 'std'])
-
-# 연령대별 본사/현업 비율 계산
-count_table_age = pd.crosstab(df['연령대'], df['본사/현업'])
-ratio_table = count_table_age.div(count_table_age.sum(axis=1), axis=0)
-
-# 전체 본사/현업 비율 계산
-count_table_total = df['본사/현업'].value_counts()
-
-# mean 값만 추출 (Radar Chart용)
-mean_values = grouped_stats.xs('mean', level=1, axis=1)  # (연령대 x work_style) 형태
 
 # Streamlit 레이아웃
 st.title("WorkStyle 시각화")
@@ -55,46 +41,44 @@ with tab1:
     # 모든 연령대를 기본 선택값으로 설정
     all_ages = df['연령대'].unique().tolist()
     selected_ages = st.multiselect("연령대를 선택하세요:", options=all_ages, default=all_ages)
-    
-    if selected_work_col and selected_ages:
+
+    # 본사/현업 필터링 옵션 추가
+    all_positions = df['본사/현업'].unique().tolist()
+    selected_positions = st.multiselect("본사/현업을 선택하세요:", options=all_positions, default=all_positions)
+
+    # 필터 적용
+    filtered_df = df[df['연령대'].isin(selected_ages) & df['본사/현업'].isin(selected_positions)]
+
+    if selected_work_col and len(filtered_df) > 0:
+        # 연령대별 mean, std 재계산(필터 적용 후)
+        if len(filtered_df['연령대'].unique()) > 0:
+            filtered_grouped_stats = filtered_df.groupby('연령대')[selected_work_col].agg(['mean', 'std'])
+        else:
+            filtered_grouped_stats = pd.DataFrame()
+
+        # KDE 플롯
         fig_kde = plt.figure(figsize=(10, 6))
-        for age_group in selected_ages:
-            sns.kdeplot(data=df[df['연령대'] == age_group][selected_work_col], label=f"{age_group}")
+        for age_group in filtered_df['연령대'].unique():
+            age_group_data = filtered_df[filtered_df['연령대'] == age_group][selected_work_col]
+            if len(age_group_data) > 0:
+                sns.kdeplot(data=age_group_data, label=f"{age_group}")
         plt.title(f"{selected_work_col} 연령대별 분포(KDE)")
         plt.xlabel(selected_work_col)
         plt.ylabel("Density")
         plt.legend()
         st.pyplot(fig_kde)
 
-        # 선택한 work style에 대한 연령대별 mean/std 표 출력
-        stats_for_selection = grouped_stats[selected_work_col].loc[selected_ages, :]
-        st.write("### 연령대별 Mean / STD")
-        st.table(stats_for_selection)
-
+        # 연령대별 Mean/STD 표 출력 (필터 후 데이터 기준)
+        if not filtered_grouped_stats.empty:
+            st.write("### 연령대별 Mean / STD (필터 적용)")
+            st.table(filtered_grouped_stats)
+        else:
+            st.info("해당 조건에 맞는 데이터가 없습니다.")
     else:
-        st.info("상단에서 WORK_ 컬럼과 연령대를 선택해주세요.")
+        st.info("상단에서 WORK_ 컬럼과 연령대, 본사/현업을 선택해주세요.")
+
 
 with tab2:
-    st.header("연령대별 본사/현업 비율 및 전체 본사/현업 비율")
-    
-    # 연령대별 본사/현업 비율 stacked bar
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ratio_table.plot(kind='bar', stacked=True, ax=ax)
-    ax.set_title("연령대별 본사/현업 비율")
-    ax.set_xlabel("연령대")
-    ax.set_ylabel("비율")
-    ax.legend(title="본사/현업", bbox_to_anchor=(1.05, 1), loc='upper left')
-    st.pyplot(fig)
-
-    # 전체 본사/현업 비율 파이차트
-    fig_pie = plt.figure(figsize=(4, 4))
-    count_table_total.plot(kind='pie', autopct='%.1f%%', startangle=90)
-    plt.title("전체 본사/현업 비율")
-    plt.ylabel("")
-    st.pyplot(fig_pie)
-
-
-with tab3:
     st.header("연령대별 Work_Style 레이더 차트")
 
     # 레이더 차트에서 비교할 연령대 선택
@@ -147,3 +131,22 @@ with tab3:
         st.pyplot(fig_radar)
     else:
         st.info("비교할 연령대를 하나 이상 선택해주세요.")
+
+with tab3:
+    st.header("연령대별 본사/현업 비율 및 전체 본사/현업 비율")
+    
+    # 연령대별 본사/현업 비율 stacked bar
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ratio_table.plot(kind='bar', stacked=True, ax=ax)
+    ax.set_title("연령대별 본사/현업 비율")
+    ax.set_xlabel("연령대")
+    ax.set_ylabel("비율")
+    ax.legend(title="본사/현업", bbox_to_anchor=(1.05, 1), loc='upper left')
+    st.pyplot(fig)
+
+    # 전체 본사/현업 비율 파이차트
+    fig_pie = plt.figure(figsize=(4, 4))
+    count_table_total.plot(kind='pie', autopct='%.1f%%', startangle=90)
+    plt.title("전체 본사/현업 비율")
+    plt.ylabel("")
+    st.pyplot(fig_pie)
