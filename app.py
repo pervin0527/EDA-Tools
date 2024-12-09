@@ -41,34 +41,48 @@ ratio_table = count_table_age.div(count_table_age.sum(axis=1), axis=0)
 # 전체 본사/현업 비율 계산
 count_table_total = df['본사/현업'].value_counts()
 
-# 라벨 정제: "ABC(WORK_XXX)" 형태에서 "WORK_XXX"만 추출
-# 예: "SOMETHING (WORK_PROCESS)" -> "PROCESS"
-# split("(WORK_")[1].replace(")", "") 로 WORK_ 이후 부분만 추출
+# 라벨 정제
 categories = [c.split("(WORK_")[1].replace(")", "") for c in work_columns]
 
 st.title("WorkStyle 시각화")
 
-# tab1, tab2, tab3 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "본사/현업 비율"])
 tab1, tab2 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트"])
+
+# 근속년수 필터를 위해 mapping 정의
+tenure_options = {
+    "1년 미만": 1,
+    "3년 미만": 3,
+    "5년 미만": 5,
+    "10년 미만": 10,
+    "15년 미만": 15,
+    "20년 미만": 20
+}
 
 with tab1:
     st.header("Work_Style별 그래프")
 
     selected_work_col = st.selectbox("Work Style을 선택하세요:", options=work_columns)
     
-    # 모든 연령대를 기본 선택값으로 설정
+    # 연령대 필터
     all_ages = df['연령대'].unique().tolist()
     selected_ages = st.multiselect("연령대를 선택하세요:", options=all_ages, default=all_ages)
 
-    # 본사/현업 필터링 옵션
+    # 본사/현업 필터
     all_positions = df['본사/현업'].unique().tolist()
     selected_positions = st.multiselect("본사/현업을 선택하세요:", options=all_positions, default=all_positions)
 
+    # 근속년수 필터
+    selected_tenure_label = st.selectbox("근속년수 기준을 선택하세요:", options=list(tenure_options.keys()))
+    selected_tenure = tenure_options[selected_tenure_label]
+
     # 필터 적용
-    filtered_df = df[df['연령대'].isin(selected_ages) & df['본사/현업'].isin(selected_positions)]
+    filtered_df = df[
+        df['연령대'].isin(selected_ages) &
+        df['본사/현업'].isin(selected_positions) &
+        (df['근속년수'] < selected_tenure)
+    ]
 
     if selected_work_col and len(filtered_df) > 0:
-        # 필터된 데이터에 대한 mean/std 재계산
         if len(filtered_df['연령대'].unique()) > 0:
             filtered_grouped_stats = filtered_df.groupby('연령대')[selected_work_col].agg(['mean', 'std'])
         else:
@@ -94,13 +108,12 @@ with tab1:
         else:
             st.info("해당 조건에 맞는 데이터가 없습니다.")
     else:
-        st.info("상단에서 WORK_ 컬럼과 연령대, 본사/현업을 선택해주세요.")
+        st.info("상단에서 WORK_ 컬럼, 연령대, 본사/현업, 근속년수 필터를 선택해주세요.")
 
 with tab2:
     st.header("연령대별 Work_Style 레이더 차트")
 
-    # 레이더 차트에서도 본사/현업 필터 추가
-    # key 파라미터를 추가하여 중복 ID 에러 방지
+    # 레이더 차트 필터
     radar_selected_ages = st.multiselect(
         "레이더 차트에서 비교할 연령대를 선택하세요:", 
         options=df['연령대'].unique(), 
@@ -114,8 +127,16 @@ with tab2:
         key="radar_positions"
     )
 
+    # 근속년수 필터 (레이더 차트용)
+    radar_selected_tenure_label = st.selectbox("근속년수 기준을 선택하세요:(레이더)", options=list(tenure_options.keys()), key="radar_tenure")
+    radar_selected_tenure = tenure_options[radar_selected_tenure_label]
+
     # 레이더 차트용 필터 적용
-    radar_filtered_df = df[df['연령대'].isin(radar_selected_ages) & df['본사/현업'].isin(radar_selected_positions)]
+    radar_filtered_df = df[
+        df['연령대'].isin(radar_selected_ages) &
+        df['본사/현업'].isin(radar_selected_positions) &
+        (df['근속년수'] < radar_selected_tenure)
+    ]
 
     if len(radar_filtered_df) > 0 and len(radar_selected_ages) > 0:
         # 필터링된 데이터로 mean 재계산
@@ -158,24 +179,4 @@ with tab2:
         plt.title("연령대별 Work_Style 평균 레이더 차트 (필터 적용)", y=1.1)
         st.pyplot(fig_radar)
     else:
-        st.info("비교할 연령대 및 본사/현업을 하나 이상 선택하고 해당하는 데이터가 있어야 합니다.")
-
-
-# with tab3:
-#     st.header("연령대별 본사/현업 비율 및 전체 본사/현업 비율")
-    
-#     # 연령대별 본사/현업 비율 stacked bar
-#     fig, ax = plt.subplots(figsize=(10, 6))
-#     ratio_table.plot(kind='bar', stacked=True, ax=ax)
-#     ax.set_title("연령대별 본사/현업 비율")
-#     ax.set_xlabel("연령대")
-#     ax.set_ylabel("비율")
-#     ax.legend(title="본사/현업", bbox_to_anchor=(1.05, 1), loc='upper left')
-#     st.pyplot(fig)
-
-#     # 전체 본사/현업 비율 파이차트
-#     fig_pie = plt.figure(figsize=(4, 4))
-#     count_table_total.plot(kind='pie', autopct='%.1f%%', startangle=90)
-#     plt.title("전체 본사/현업 비율")
-#     plt.ylabel("")
-#     st.pyplot(fig_pie)
+        st.info("비교할 연령대, 본사/현업, 근속년수 기준을 선택하고 해당하는 데이터가 있어야 합니다.")
