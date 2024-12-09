@@ -10,12 +10,11 @@ from matplotlib import font_manager, rc
 try:
     font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"  # 서버 환경
 except FileNotFoundError:
-    font_path = "./fonts/NanumGothic.ttf"  # 로컬 환경
+    font_path = "./fonts/NanumGothic.ttf"
 
-# 폰트 설정
-font = font_manager.FontProperties(fname=font_path).get_name()
-rc('font', family=font)
-rc('axes', unicode_minus=False)  # 마이너스 깨짐 방지
+font_manager.fontManager.addfont(font_path)
+plt.rcParams['font.family'] = font_manager.FontProperties(fname=font_path).get_name()
+plt.rcParams['axes.unicode_minus'] = False
 
 if __name__ == "__main__":
     # 데이터 로드
