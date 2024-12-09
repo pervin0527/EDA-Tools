@@ -10,7 +10,7 @@ plt.rcParams['axes.unicode_minus'] = False
 
 if __name__ == "__main__":
     # 데이터 로드
-    df = pd.read_excel("./SR_ROW.xlsx", sheet_name="308명")
+    df = pd.read_excel("./data/SR_ROW.xlsx", sheet_name="308명")
     
     # 연령 결측치가 있는 행 제거
     df = df.dropna(subset=['연령'])
