@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # WORK_ 컬럼 추출
     work_columns = [col for col in df.columns if "(WORK_" in col]
 
-    # 연령대 컬럼 생성 (결측치 행이 제거되었으므로 모든 값이 유효함)
+    # 연령대 컬럼 생성
     df['연령대'] = df['연령'].apply(lambda x: f"{int(x//10*10)}대")
 
     # 연령대별 mean, std 계산
@@ -48,8 +48,11 @@ if __name__ == "__main__":
         st.header("Work_Style별 그래프")
 
         selected_work_col = st.selectbox("Work Style을 선택하세요:", options=work_columns)
-        selected_ages = st.multiselect("연령대를 선택하세요:", options=df['연령대'].unique())
-
+        
+        # 연령대 전체를 기본 선택값으로 설정
+        all_ages = df['연령대'].unique().tolist()
+        selected_ages = st.multiselect("연령대를 선택하세요:", options=all_ages, default=all_ages)
+        
         if selected_work_col and selected_ages:
             fig_kde = plt.figure(figsize=(10, 6))
             for age_group in selected_ages:
@@ -59,6 +62,12 @@ if __name__ == "__main__":
             plt.ylabel("Density")
             plt.legend()
             st.pyplot(fig_kde)
+
+            # 선택한 work style에 대한 연령대별 mean/std 표 출력
+            stats_for_selection = grouped_stats[selected_work_col].loc[selected_ages, :]
+            st.write("### 연령대별 Mean / STD")
+            st.table(stats_for_selection)
+
         else:
             st.info("상단에서 WORK_ 컬럼과 연령대를 선택해주세요.")
 
