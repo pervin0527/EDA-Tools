@@ -113,6 +113,10 @@ with tab1:
     else:
         st.info("상단에서 WORK_ 컬럼, 연령대, 본사/현업, 근속년수 필터를 선택해주세요.")
 
+# 한글 라벨만 추출: '(' 문자 앞부분을 추출
+# 예: "업무프로세스(WORK_PROCESS)" -> "업무프로세스"
+categories_kor = [c.split("(")[0].strip() for c in work_columns]
+
 with tab2:
     st.header("연령대별 Work_Style 레이더 차트")
 
@@ -146,7 +150,7 @@ with tab2:
         radar_grouped_stats = radar_filtered_df.groupby('연령대')[work_columns].mean()
 
         # 레이더 차트 그리기
-        N = len(categories)
+        N = len(categories_kor)
         angles = np.linspace(0, 2*np.pi, N, endpoint=False)
 
         fig_radar = plt.figure(figsize=(8,8))
@@ -161,14 +165,14 @@ with tab2:
                 ax.plot(angle_for_plot, values, label=age)
                 ax.fill(angle_for_plot, values, alpha=0.1)
 
-        # 축 라벨 설정: 정제된 categories 사용
+        # 축 라벨 설정: 정제된 한글 categories_kor 사용
         ax.set_xticks(angles)
-        ax.set_xticklabels(categories, fontsize=9)
+        ax.set_xticklabels(categories_kor, fontsize=9)
 
         # 라벨 회전 및 패딩
         for label, angle in zip(ax.get_xticklabels(), angles):
             angle_deg = angle * 180/np.pi
-            if angle_deg > 90 and angle_deg < 270:
+            if 90 < angle_deg < 270:
                 angle_deg = angle_deg + 180
                 label.set_rotation(180)
             label.set_rotation(angle_deg)
