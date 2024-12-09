@@ -49,7 +49,7 @@ categories = [c.split("(WORK_")[1].replace(")", "") for c in work_columns]
 
 st.title("WorkStyle 시각화")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "워드클라우드", "카테고리별 응답 분석"])
+tab1, tab2, tab4 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "카테고리별 응답 분석"])
 
 # 근속년수 필터를 위해 mapping 정의
 tenure_options = {
@@ -187,32 +187,6 @@ with tab2:
         st.pyplot(fig_radar)
     else:
         st.info("비교할 연령대, 본사/현업, 근속년수 기준을 선택하고 해당하는 데이터가 있어야 합니다.")
-
-with tab3:
-    df_sub = load_data()
-    st.header('조직문화 연관 단어 워드클라우드')
-    
-    # 워드클라우드용 데이터 준비
-    word_column = '우리 회사의 조직문화 하면 떠오르는 단어 1개(8글자 이내)를 적어 주시기 바랍니다.'
-    words = df_sub[word_column].dropna().tolist()
-    
-    if words:
-        wordcloud = create_wordcloud(words)
-        if wordcloud is not None:
-            fig, ax = plt.subplots(figsize=(10, 5))
-            ax.imshow(wordcloud)
-            ax.axis('off')
-            plt.tight_layout(pad=0)
-            st.pyplot(fig)
-            
-            st.subheader('단어 빈도수')
-            processed_words = [preprocess_text(word) for word in words if preprocess_text(word)]
-            word_counts = Counter(processed_words)
-            word_freq_df = pd.DataFrame.from_dict(word_counts, orient='index', columns=['빈도수'])
-            word_freq_df = word_freq_df.sort_values('빈도수', ascending=False)
-            st.dataframe(word_freq_df)
-    else:
-        st.warning('단어 데이터가 없습니다.')
 
 with tab4:
     df_sub = load_data()
