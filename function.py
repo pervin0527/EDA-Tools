@@ -58,7 +58,7 @@ QUESTIONS = [
 
 def load_data():
     # 엑셀 파일 로드
-    df = pd.read_excel('SR_질문_목록_데이터_병합결과.xlsx')
+    df = pd.read_excel('./data/SR_질문_목록_데이터_병합결과.xlsx')
     
     # 점수 컬럼 전처리 함수
     def clean_score(text):
