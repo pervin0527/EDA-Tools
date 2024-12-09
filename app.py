@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 from matplotlib import font_manager, rc
 
-# 로컬 또는 서버 환경에서 폰트 경로 설정
+# 폰트 설정
 try:
     font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"  # 서버 환경
 except FileNotFoundError:
@@ -28,10 +28,21 @@ work_columns = [col for col in df.columns if "(WORK_" in col]
 # 연령대 컬럼 생성
 df['연령대'] = df['연령'].apply(lambda x: f"{int(x//10*10)}대")
 
+# 전체 데이터를 기반으로 한 mean, std 계산(레이더 차트용)
+grouped_stats = df.groupby('연령대')[work_columns].agg(['mean', 'std'])
+mean_values = grouped_stats.xs('mean', level=1, axis=1)
+
+# 연령대별 본사/현업 비율 계산
+count_table_age = pd.crosstab(df['연령대'], df['본사/현업'])
+ratio_table = count_table_age.div(count_table_age.sum(axis=1), axis=0)
+
+# 전체 본사/현업 비율 계산
+count_table_total = df['본사/현업'].value_counts()
+
 # Streamlit 레이아웃
 st.title("WorkStyle 시각화")
 
-tab1, tab2, tab3 = st.tabs(["Work_Style별 그래프", "본사/현업 비율", "연령대별 Work_Style 레이더 차트"])
+tab1, tab2, tab3 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "본사/현업 비율"])
 
 with tab1:
     st.header("Work_Style별 그래프")
@@ -50,7 +61,7 @@ with tab1:
     filtered_df = df[df['연령대'].isin(selected_ages) & df['본사/현업'].isin(selected_positions)]
 
     if selected_work_col and len(filtered_df) > 0:
-        # 연령대별 mean, std 재계산(필터 적용 후)
+        # 필터된 데이터에 대한 mean/std 재계산
         if len(filtered_df['연령대'].unique()) > 0:
             filtered_grouped_stats = filtered_df.groupby('연령대')[selected_work_col].agg(['mean', 'std'])
         else:
@@ -58,7 +69,8 @@ with tab1:
 
         # KDE 플롯
         fig_kde = plt.figure(figsize=(10, 6))
-        for age_group in filtered_df['연령대'].unique():
+        unique_ages_in_filtered = filtered_df['연령대'].unique()
+        for age_group in unique_ages_in_filtered:
             age_group_data = filtered_df[filtered_df['연령대'] == age_group][selected_work_col]
             if len(age_group_data) > 0:
                 sns.kdeplot(data=age_group_data, label=f"{age_group}")
@@ -77,42 +89,35 @@ with tab1:
     else:
         st.info("상단에서 WORK_ 컬럼과 연령대, 본사/현업을 선택해주세요.")
 
-
 with tab2:
     st.header("연령대별 Work_Style 레이더 차트")
 
-    # 레이더 차트에서 비교할 연령대 선택
     radar_selected_ages = st.multiselect("레이더 차트에서 비교할 연령대를 선택하세요:", options=all_ages, default=all_ages)
 
     if len(radar_selected_ages) > 0:
         categories = work_columns
         N = len(categories)
-
         angles = np.linspace(0, 2*np.pi, N, endpoint=False)
 
         fig_radar = plt.figure(figsize=(8,8))
         ax = plt.subplot(111, polar=True)
 
         for age in radar_selected_ages:
-            # mean_values에서 해당 연령대 값 추출
-            if age not in mean_values.index:
-                continue
-            values = mean_values.loc[age, :].values
-            values = np.append(values, values[0])
-            angle_for_plot = np.append(angles, angles[0])
+            if age in mean_values.index:
+                values = mean_values.loc[age, :].values
+                values = np.append(values, values[0])
+                angle_for_plot = np.append(angles, angles[0])
 
-            ax.plot(angle_for_plot, values, label=age)
-            ax.fill(angle_for_plot, values, alpha=0.1)
+                ax.plot(angle_for_plot, values, label=age)
+                ax.fill(angle_for_plot, values, alpha=0.1)
 
-        # 기본적인 라벨 설정
+        # 축 라벨 설정
         ax.set_xticks(angles)
-        ax.set_xticklabels(categories, fontsize=9)  # 폰트 사이즈 줄이기
+        ax.set_xticklabels(categories, fontsize=9)
 
-        # 라벨 회전 및 패딩 조정
-        # 각 라벨을 각도에 맞춰서 회전시켜 가독성 향상
+        # 라벨 회전 및 패딩
         for label, angle in zip(ax.get_xticklabels(), angles):
             angle_deg = angle * 180/np.pi
-            # 만약 텍스트가 뒤집히는 구간(180도 주변)에서 반전시켜 읽기 쉽게 함
             if angle_deg > 90 and angle_deg < 270:
                 angle_deg = angle_deg + 180
                 label.set_rotation(180)
@@ -120,10 +125,7 @@ with tab2:
             label.set_verticalalignment('center')
             label.set_horizontalalignment('center')
 
-        # y축 라벨 제거(필요시 유지 가능)
         ax.set_yticklabels([])
-
-        # 라벨과 중심 사이 거리 패딩 (tick_params 사용)
         ax.tick_params(axis='x', pad=15)
 
         plt.legend(bbox_to_anchor=(1.1, 1.1))
