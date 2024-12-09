@@ -97,37 +97,51 @@ with tab2:
 with tab3:
     st.header("연령대별 Work_Style 레이더 차트")
 
-    # 레이더 차트를 위해 연령대 선택 (기본적으로 모두 선택)
+    # 레이더 차트에서 비교할 연령대 선택
     radar_selected_ages = st.multiselect("레이더 차트에서 비교할 연령대를 선택하세요:", options=all_ages, default=all_ages)
 
     if len(radar_selected_ages) > 0:
-        # 레이더 차트용 데이터 준비
         categories = work_columns
         N = len(categories)
 
-        # 각 카테고리에 대응하는 각도 계산
         angles = np.linspace(0, 2*np.pi, N, endpoint=False)
 
         fig_radar = plt.figure(figsize=(8,8))
         ax = plt.subplot(111, polar=True)
 
-        # 레이더 차트 그리기
         for age in radar_selected_ages:
+            # mean_values에서 해당 연령대 값 추출
+            if age not in mean_values.index:
+                continue
             values = mean_values.loc[age, :].values
-            # 시작점과 끝점 연결 위해 첫 값 다시 append
             values = np.append(values, values[0])
             angle_for_plot = np.append(angles, angles[0])
 
             ax.plot(angle_for_plot, values, label=age)
             ax.fill(angle_for_plot, values, alpha=0.1)
 
+        # 기본적인 라벨 설정
         ax.set_xticks(angles)
-        ax.set_xticklabels(categories, fontsize=10)
+        ax.set_xticklabels(categories, fontsize=9)  # 폰트 사이즈 줄이기
 
-        # y축 라벨 제거(필요시 조정)
+        # 라벨 회전 및 패딩 조정
+        # 각 라벨을 각도에 맞춰서 회전시켜 가독성 향상
+        for label, angle in zip(ax.get_xticklabels(), angles):
+            angle_deg = angle * 180/np.pi
+            # 만약 텍스트가 뒤집히는 구간(180도 주변)에서 반전시켜 읽기 쉽게 함
+            if angle_deg > 90 and angle_deg < 270:
+                angle_deg = angle_deg + 180
+                label.set_rotation(180)
+            label.set_rotation(angle_deg)
+            label.set_verticalalignment('center')
+            label.set_horizontalalignment('center')
+
+        # y축 라벨 제거(필요시 유지 가능)
         ax.set_yticklabels([])
 
-        # 범례
+        # 라벨과 중심 사이 거리 패딩 (tick_params 사용)
+        ax.tick_params(axis='x', pad=15)
+
         plt.legend(bbox_to_anchor=(1.1, 1.1))
         plt.title("연령대별 Work_Style 평균 레이더 차트", y=1.1)
         st.pyplot(fig_radar)
