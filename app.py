@@ -48,7 +48,8 @@ categories = [c.split("(WORK_")[1].replace(")", "") for c in work_columns]
 
 st.title("WorkStyle 시각화")
 
-tab1, tab2, tab3 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "본사/현업 비율"])
+# tab1, tab2, tab3 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "본사/현업 비율"])
+tab1, tab2 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트"])
 
 with tab1:
     st.header("Work_Style별 그래프")
