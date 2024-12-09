@@ -99,8 +99,19 @@ with tab2:
     st.header("연령대별 Work_Style 레이더 차트")
 
     # 레이더 차트에서도 본사/현업 필터 추가
-    radar_selected_ages = st.multiselect("레이더 차트에서 비교할 연령대를 선택하세요:", options=df['연령대'].unique(), default=df['연령대'].unique())
-    radar_selected_positions = st.multiselect("본사/현업을 선택하세요:", options=df['본사/현업'].unique().tolist(), default=df['본사/현업'].unique().tolist())
+    # key 파라미터를 추가하여 중복 ID 에러 방지
+    radar_selected_ages = st.multiselect(
+        "레이더 차트에서 비교할 연령대를 선택하세요:", 
+        options=df['연령대'].unique(), 
+        default=df['연령대'].unique(),
+        key="radar_ages"
+    )
+    radar_selected_positions = st.multiselect(
+        "본사/현업을 선택하세요:", 
+        options=df['본사/현업'].unique().tolist(), 
+        default=df['본사/현업'].unique().tolist(),
+        key="radar_positions"
+    )
 
     # 레이더 차트용 필터 적용
     radar_filtered_df = df[df['연령대'].isin(radar_selected_ages) & df['본사/현업'].isin(radar_selected_positions)]
@@ -147,6 +158,7 @@ with tab2:
         st.pyplot(fig_radar)
     else:
         st.info("비교할 연령대 및 본사/현업을 하나 이상 선택하고 해당하는 데이터가 있어야 합니다.")
+
 
 # with tab3:
 #     st.header("연령대별 본사/현업 비율 및 전체 본사/현업 비율")
