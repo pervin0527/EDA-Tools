@@ -9,7 +9,7 @@ from collections import Counter
 from matplotlib import font_manager, rc
 from function import create_styled_bar_chart, CATEGORIES, QUESTIONS, analyze_categorical_responses, load_data
 
-# 폰트 설정
+## 폰트 설정
 try:
     font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"  # 서버 환경
 except FileNotFoundError:
@@ -19,17 +19,12 @@ font_manager.fontManager.addfont(font_path)
 plt.rcParams['font.family'] = font_manager.FontProperties(fname=font_path).get_name()
 plt.rcParams['axes.unicode_minus'] = False
 
-# 데이터 로드
+## 데이터 로드
 df = pd.read_excel("./data/SR_ROW.xlsx", sheet_name="308명")
+df = df.dropna(subset=['연령']) # 결측치 제거
 
-# 연령 결측치가 있는 행 제거
-df = df.dropna(subset=['연령'])
-
-# WORK_ 컬럼 추출
-work_columns = [col for col in df.columns if "(WORK_" in col]
-
-# 연령대 컬럼 생성
-df['연령대'] = df['연령'].apply(lambda x: f"{int(x//10*10)}대")
+work_columns = [col for col in df.columns if "(WORK_" in col] # WORK_ 컬럼 추출
+df['연령대'] = df['연령'].apply(lambda x: f"{int(x//10*10)}대") # 연령대 컬럼 생성
 
 # 전체 데이터 기반 mean, std 계산(기본용)
 grouped_stats = df.groupby('연령대')[work_columns].agg(['mean', 'std'])
@@ -192,11 +187,15 @@ with tab3:
     st.title('SR 조직문화 설문조사 분석 대시보드')
     
     try:
+        # df = load_data()
         df = pd.read_excel("./data/SR_질문_목록_데이터_병합결과.xlsx")
         
-        categories = ['전체', '인사하위영역', '본사/현업', '사원하위그룹', 
-                      '정규직/비정규직', '권한', '연령', '성별', '직위', '직급']
-        selected_category = st.selectbox('카테고리 선택', categories, index=0)
+        selected_category = st.selectbox(
+            '카테고리 선택',
+            CATEGORIES,
+            index=0
+        )
+        
         stats = analyze_categorical_responses(df, selected_category)
         
         if stats is not None:
