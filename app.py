@@ -49,7 +49,8 @@ categories = [c.split("(WORK_")[1].replace(")", "") for c in work_columns]
 
 st.title("WorkStyle 시각화")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "test", "카테고리별 응답 분석"])
+# tab1, tab2, tab3, tab4 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "test", "카테고리별 응답 분석"])
+tab1, tab2, tab4 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "카테고리별 응답 분석"])
 
 # 근속년수 필터를 위해 mapping 정의
 tenure_options = {
