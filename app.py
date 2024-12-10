@@ -187,8 +187,8 @@ with tab3:
     st.title('SR 조직문화 설문조사 분석 대시보드')
     
     try:
-        # df = load_data()
-        df = pd.read_excel("./data/SR_질문_목록_데이터_병합결과.xlsx")
+        df = load_data()
+        # df = pd.read_excel("./data/SR_질문_목록_데이터_병합결과.xlsx")
         
         selected_category = st.selectbox(
             '카테고리 선택',
