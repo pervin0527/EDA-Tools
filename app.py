@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 from collections import Counter
 from matplotlib import font_manager, rc
-from function import create_styled_bar_chart, create_styled_donut_chart, create_styled_heatmap, create_wordcloud, preprocess_text, CATEGORIES, QUESTIONS, analyze_categorical_responses, load_data
+from function import create_styled_bar_chart, CATEGORIES, QUESTIONS, analyze_categorical_responses, load_data
 
 # 폰트 설정
 try:
@@ -189,52 +189,37 @@ with tab2:
         st.info("비교할 연령대, 본사/현업, 근속년수 기준을 선택하고 해당하는 데이터가 있어야 합니다.")
 
 with tab4:
+    # 메인 화면에 선택 옵션 배치
     df_sub = load_data()
-    st.header('카테고리별 응답 분석')
+    col1, col2 = st.columns([1, 2])
     
-    col1, col2 = st.columns(2)
     with col1:
-        selected_category = st.selectbox('카테고리 선택', CATEGORIES)
+        selected_question = st.selectbox('질문 선택', QUESTIONS[:-2])  # 마지막 두 문항 제외
     with col2:
-        selected_question = st.selectbox('질문 선택', QUESTIONS)
+        selected_category = st.selectbox(
+            '카테고리 선택',
+            CATEGORIES,
+            index=0
+        )
     
-    means, dist = analyze_categorical_responses(df_sub, selected_question, selected_category)
+    stats = analyze_categorical_responses(df_sub, selected_category)
     
-    if means is not None:
-        if selected_question in QUESTIONS[-2:]:  # 다중 선택 문항
-            st.subheader('다중 선택 항목 분석')
-            fig3 = create_styled_heatmap(
-                means,
-                f'{selected_category}별 응답 분포'
-            )
-            st.plotly_chart(fig3, use_container_width=True)
-            
-            st.subheader('상세 데이터')
-            st.dataframe(means.round(2), use_container_width=True)
+    if stats is not None:
+        st.subheader(f'{selected_category} 분석 결과')
+        st.dataframe(stats, use_container_width=True)
         
-        else:  # 일반 점수 문항
-            col1, col2 = st.columns(2)
+        if len(stats) > 1 and selected_category != '전체':
+            # 평균 컬럼만 선택하여 시각화
+            avg_cols = [col for col in stats.columns if col[1] == '평균']
+            avg_data = stats[avg_cols].mean(axis=1)  # 각 카테고리의 평균값 계산
             
-            with col1:
-                st.subheader('카테고리별 평균 점수')
-                fig1 = create_styled_bar_chart(
-                    means,
-                    f'{selected_category}별 평균 점수',
-                    selected_category,
-                    '평균 점수'
-                )
-                st.plotly_chart(fig1, use_container_width=True)
-            
-            with col2:
-                st.subheader('카테고리별 응답 분포')
-                fig2 = create_styled_donut_chart(
-                    dist,
-                    f'{selected_category}별 응답 분포'
-                )
-                st.plotly_chart(fig2, use_container_width=True)
-            
-            st.subheader('상세 데이터')
-            st.dataframe(dist.round(2), use_container_width=True)
+            fig = create_styled_bar_chart(
+                avg_data,
+                f'{selected_category}별 전체 평균 점수',
+                selected_category,
+                '평균 점수'
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
 
 with tab3:
