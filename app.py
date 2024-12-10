@@ -238,7 +238,7 @@ with tab4:
 
 
 with tab3:
-    t3_df = pd.read_csv("./data/SR_질문_목록_데이터_병합결과.xlsx")
+    t3_df = pd.read_excel("./data/SR_질문_목록_데이터_병합결과.xlsx")
     question_cols = [
         '우리 조직은 정기적, 비정기적으로 경영진 및 상급자들과 원활한 소통이 이루어지고 있다.',
         '우리 조직은 직급과 관계없이 자유롭게 의견을 제시하고 토의할 수 있는 분위기이다.',
