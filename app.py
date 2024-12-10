@@ -189,35 +189,28 @@ with tab2:
 
 with tab3:
     # 메인 화면에 선택 옵션 배치
-    df_sub = load_data()
-    col1, col2 = st.columns([1, 2])
+    st.title('SR 조직문화 설문조사 분석 대시보드')
     
-    with col1:
-        selected_question = st.selectbox('질문 선택', QUESTIONS[:-2])  # 마지막 두 문항 제외
-    with col2:
+    try:
+        df = load_data()
+        
         selected_category = st.selectbox(
             '카테고리 선택',
             CATEGORIES,
             index=0
         )
-    
-    stats = analyze_categorical_responses(df_sub, selected_category)
-    
-    if stats is not None:
-        st.subheader(f'{selected_category} 분석 결과')
-        st.dataframe(stats, use_container_width=True)
         
-        if len(stats) > 1 and selected_category != '전체':
-            # 평균 컬럼만 선택하여 시각화
-            avg_cols = [col for col in stats.columns if col[1] == '평균']
-            avg_data = stats[avg_cols].mean(axis=1)  # 각 카테고리의 평균값 계산
+        stats = analyze_categorical_responses(df, selected_category)
+        
+        if stats is not None:
+            st.subheader(f'{selected_category} 분석 결과')
+            st.dataframe(stats.style.format("{:.2f}"), use_container_width=True)
             
-            fig = create_styled_bar_chart(
-                avg_data,
-                f'{selected_category}별 전체 평균 점수',
-                selected_category,
-                '평균 점수'
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if len(stats) > 1:
+                # 평균 컬럼만 선택하여 시각화
+                avg_cols = [col for col in stats.columns if col[1] == '평균']
+                avg_data = stats[avg_cols].mean(axis=1)  # 각 카테고리의 평균값 계산
+                
 
-
+    except Exception as e:
+        st.error(f'데이터 분석 중 오류 발생: {str(e)}')
