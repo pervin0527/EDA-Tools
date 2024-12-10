@@ -192,14 +192,11 @@ with tab3:
     st.title('SR 조직문화 설문조사 분석 대시보드')
     
     try:
-        df = load_data()
+        df = pd.read_excel("./data/SR_질문_목록_데이터_병합결과.xlsx")
         
-        selected_category = st.selectbox(
-            '카테고리 선택',
-            CATEGORIES,
-            index=0
-        )
-        
+        categories = ['전체', '인사하위영역', '본사/현업', '사원하위그룹', 
+                      '정규직/비정규직', '권한', '연령', '성별', '직위', '직급']
+        selected_category = st.selectbox('카테고리 선택', categories, index=0)
         stats = analyze_categorical_responses(df, selected_category)
         
         if stats is not None:
