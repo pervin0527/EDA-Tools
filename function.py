@@ -53,7 +53,7 @@ QUESTIONS = [
 ]
 
 def load_data():
-    df = pd.read_excel('SR_질문_목록_데이터_병합결과.xlsx')
+    df = pd.read_excel('./data/SR_질문_목록_데이터_병합결과.xlsx')
     
     def clean_score(text):
         if isinstance(text, str):
