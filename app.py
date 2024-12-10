@@ -238,6 +238,7 @@ with tab4:
 
 
 with tab3:
+    t3_df = pd.read_csv("./data/SR_질문_목록_데이터_병합결과.xlsx")
     question_cols = [
         '우리 조직은 정기적, 비정기적으로 경영진 및 상급자들과 원활한 소통이 이루어지고 있다.',
         '우리 조직은 직급과 관계없이 자유롭게 의견을 제시하고 토의할 수 있는 분위기이다.',
@@ -253,7 +254,7 @@ with tab3:
 
     # 점수 칼럼들을 숫자로 변환 (예: "5점" -> 5)
     for col in question_cols:
-        df[col] = df[col].str.replace('점', '', regex=False).astype(float)
+        t3_df[col] = t3_df[col].str.replace('점', '', regex=False).astype(float)
 
     st.title("조직문화 설문 시각화")
 
@@ -261,7 +262,7 @@ with tab3:
     category = st.selectbox("카테고리 선택", ["전체", "연령대별", "본사/현업별"])
 
     # "전체" 평균 점수
-    overall_mean = df[question_cols].mean()
+    overall_mean = t3_df[question_cols].mean()
 
     if category == "전체":
         st.subheader("전체 평균 점수")
@@ -272,7 +273,7 @@ with tab3:
         st.subheader("연령대별 평균 점수")
         # 연령대별 평균 구하기
         # 가령 '연령' 컬럼이 '30대', '40대' 등으로 표기되어 있다고 가정
-        age_group_mean = df.groupby('연령')[question_cols].mean().T
+        age_group_mean = t3_df.groupby('연령')[question_cols].mean().T
         # T로 전치하여 질문을 인덱스로, 연령대를 컬럼으로 하여 그래프화
         st.dataframe(age_group_mean)
         
@@ -288,7 +289,7 @@ with tab3:
     elif category == "본사/현업별":
         st.subheader("본사/현업별 평균 점수")
         # 가령 '본사/현업' 컬럼이 '본사', '현업' 으로 표시되어 있다고 가정
-        hq_ops_mean = df.groupby('본사/현업')[question_cols].mean().T
+        hq_ops_mean = t3_df.groupby('본사/현업')[question_cols].mean().T
         st.dataframe(hq_ops_mean)
 
         # 본사/현업 선택
