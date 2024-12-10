@@ -48,9 +48,7 @@ count_table_total = df['본사/현업'].value_counts()
 categories = [c.split("(WORK_")[1].replace(")", "") for c in work_columns]
 
 st.title("WorkStyle 시각화")
-
-# tab1, tab2, tab3, tab4 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "test", "카테고리별 응답 분석"])
-tab1, tab2, tab4 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "카테고리별 응답 분석"])
+tab1, tab2, tab3 = st.tabs(["Work_Style별 그래프", "연령대별 Work_Style 레이더 차트", "카테고리별 응답 분석"])
 
 # 근속년수 필터를 위해 mapping 정의
 tenure_options = {
@@ -189,7 +187,7 @@ with tab2:
     else:
         st.info("비교할 연령대, 본사/현업, 근속년수 기준을 선택하고 해당하는 데이터가 있어야 합니다.")
 
-with tab4:
+with tab3:
     # 메인 화면에 선택 옵션 배치
     df_sub = load_data()
     col1, col2 = st.columns([1, 2])
@@ -223,64 +221,3 @@ with tab4:
             st.plotly_chart(fig, use_container_width=True)
 
 
-# with tab3:
-#     t3_df = pd.read_excel("./data/SR_질문_목록_데이터_병합결과.xlsx")
-#     question_cols = [
-#         '우리 조직은 정기적, 비정기적으로 경영진 및 상급자들과 원활한 소통이 이루어지고 있다.',
-#         '우리 조직은 직급과 관계없이 자유롭게 의견을 제시하고 토의할 수 있는 분위기이다.',
-#         '우리 조직의 리더들은 구성원들을 인정하고 격려하며 동기부여한다.',
-#         '우리 회사의 구성원들은 서로 상호간 믿음과 친밀도가 높은 편이다.',
-#         '우리 조직은 목표 달성에 필요한 적임자를 선정하고 승진시킨다.',
-#         '우리 조직의 리더들은 개인의 이해에 치우치지 않고 공정한 업무추진을 하고 있다.',
-#         '우리 회사의 경영진은 시장에서의 변화(기술변화, 경쟁사의 움직임)에 빠르게 반응하기 위해 많은 노력을 하고 있다.',
-#         '우리 회사는 변화와 혁신에 대한 공감대와 대응자세를 갖추고 있다.',
-#         '우리 회사 조직문화의 단점이라고 생각하는 것을 모두 선택해주세요.',
-#         '2024년 시행한 조직문화 프로그램 중 아는 것을 모두 선택해주세요.'
-#     ]
-
-#     # 점수 칼럼들을 숫자로 변환 (예: "5점" -> 5)
-#     for col in question_cols:
-#         t3_df[col] = t3_df[col].str.replace('점', '', regex=False).astype(float)
-
-#     st.title("조직문화 설문 시각화")
-
-#     # 카테고리 선택: "전체", "연령대별", "본사/현업별"
-#     category = st.selectbox("카테고리 선택", ["전체", "연령대별", "본사/현업별"])
-
-#     # "전체" 평균 점수
-#     overall_mean = t3_df[question_cols].mean()
-
-#     if category == "전체":
-#         st.subheader("전체 평균 점수")
-#         # 전체 평균 막대 그래프
-#         st.bar_chart(overall_mean)
-
-#     elif category == "연령대별":
-#         st.subheader("연령대별 평균 점수")
-#         # 연령대별 평균 구하기
-#         # 가령 '연령' 컬럼이 '30대', '40대' 등으로 표기되어 있다고 가정
-#         age_group_mean = t3_df.groupby('연령')[question_cols].mean().T
-#         # T로 전치하여 질문을 인덱스로, 연령대를 컬럼으로 하여 그래프화
-#         st.dataframe(age_group_mean)
-        
-#         # 특정 연령대를 선택해볼 수 있도록 selectbox 추가
-#         selected_age = st.selectbox("연령대 선택", ["전체"] + list(age_group_mean.columns))
-#         if selected_age == "전체":
-#             # 전체 연령대별 평균(각 연령대 막대그래프를 그룹으로 표시)
-#             st.line_chart(age_group_mean)
-#         else:
-#             # 개별 연령대 선택 시 해당 연령대 점수만 시각화
-#             st.bar_chart(age_group_mean[selected_age])
-
-#     elif category == "본사/현업별":
-#         st.subheader("본사/현업별 평균 점수")
-#         # 가령 '본사/현업' 컬럼이 '본사', '현업' 으로 표시되어 있다고 가정
-#         hq_ops_mean = t3_df.groupby('본사/현업')[question_cols].mean().T
-#         st.dataframe(hq_ops_mean)
-
-#         # 본사/현업 선택
-#         selected_site = st.selectbox("본사/현업 선택", ["전체"] + list(hq_ops_mean.columns))
-#         if selected_site == "전체":
-#             st.line_chart(hq_ops_mean)
-#         else:
-#             st.bar_chart(hq_ops_mean[selected_site])
