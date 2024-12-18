@@ -1,1 +1,1 @@
-# Data EDA Tool
+# eda-tools

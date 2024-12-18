@@ -1,0 +1,9 @@
+version: '3'
+services:
+  eda_tools:
+    image: repo.pocketjob.co.kr/eda_tools:latest
+    container_name: eda_tools
+    ports:
+      - "9999:9999"
+    command: ["streamlit", "run", "src/main.py", "--server.port=9999", "--server.address=0.0.0.0"]
+
